@@ -167,7 +167,7 @@ fabric.properties
 # Ignore everything but code style settings and run configurations
 # that are supposed to be shared within teams.
 
-.idea/*
+../.idea/vcs.xml
 
 !.idea/codeStyles
 !.idea/runConfigurations
@@ -334,7 +334,7 @@ bower_components
 build/Release
 
 # Dependency directories
-node_modules/
+vending-machine-app/node_modules/
 jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)
