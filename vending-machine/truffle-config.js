@@ -27,7 +27,7 @@
  *
  * MNEMONIC = <Your 12 phrase mnemonic>
  * PROJECT_ID = <Your Infura project id>
- *
+ *∑
  * Deployment with Truffle Dashboard (Recommended for best security practice)
  * --------------------------------------------------------------------------
  *
@@ -41,9 +41,6 @@
  * https://trufflesuite.com/docs/truffle/getting-started/using-the-truffle-dashboard/
  */
 
-require('dotenv').config();
-const HDWalletProvider = require('@truffle/hdwallet-provider');
-
 module.exports = {
     /**
      * Networks define how you connect to your ethereum client and let you set the
@@ -54,25 +51,13 @@ module.exports = {
      *
      * $ truffle test --network <network-name>
      */
-
+    contracts_build_directory: "../vending-machine-application/public/contracts",
     networks: {
         development: {
             host: "127.0.0.1",
             port: 8545,
-            network_id: 1337,
+            network_id: "*",
         },
-        goerli: {
-            provider: () => new HDWalletProvider({
-                privateKeys: [process.env.PRIVATE_KEY_1],
-                providerOrUrl: process.env.INFURA_API_URL,
-                numberOfAddresses: 1
-            }),
-            network_id: 4,
-            gas: 5500000,
-            confirmations: 2,
-            timeoutBlocks: 200,
-            skipDryRun: true
-        }
     },
 
     // Set default mocha options here, use special reporters, etc.
