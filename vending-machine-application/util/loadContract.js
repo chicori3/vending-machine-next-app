@@ -17,4 +17,3 @@ export const loadContract = async (name, provider) => {
 
     return deployedContract
 }
-및

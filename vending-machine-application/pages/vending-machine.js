@@ -8,13 +8,14 @@ import { loadContract } from "../util/loadContract";
 
 const VendingMachine = () => {
     let web3
-    const [error, setError] = useState('')
-    const [inventory, setInventory] = useState('')
     const [web3Api, setWeb3Api] = useState({
         provider: null,
         contract: null,
         isProviderLoaded: false
     })
+    const [error, setError] = useState('')
+    const [inventory, setInventory] = useState('')
+    const [myDonutCount, setMyDonutCount] = useState('')
 
     useEffect(() => {
         const init = async () => {
@@ -41,12 +42,20 @@ const VendingMachine = () => {
         web3Api.contract && getInventoryHandler()
     }, [web3Api.contract])
 
+    const getMyDonutCountHandler = async () => {
+        const { contract } = web3Api
+        const accounts = await web3.eth.getAccounts()
+        const count = await contract.donutBalances(accounts[0]);
+        
+        setMyDonutCount(count.toString())
+    }
 
     const connectWalletHandler = async () => {
         if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
             try {
                 await window.ethereum.request({ method: "eth_requestAccounts" })
                 web3 = new Web3(window.ethereum)
+                getMyDonutCountHandler()
             } catch (e) {
                 setError(e.message);
             }
@@ -74,6 +83,11 @@ const VendingMachine = () => {
             <section>
                 <div className="container">
                     <h2>Vending machine inventory: {inventory}</h2>
+                </div>
+            </section>
+            <section>
+                <div className="container">
+                    <h2>My donuts: {myDonutCount}</h2>
                 </div>
             </section>
             <section>
