@@ -7,15 +7,17 @@ import detectEthereumProvider from '@metamask/detect-provider'
 import { loadContract } from "../util/loadContract";
 
 const VendingMachine = () => {
-    let web3
     const [web3Api, setWeb3Api] = useState({
+        web3: null,
         provider: null,
         contract: null,
         isProviderLoaded: false
     })
+    const [account, setAccount] = useState(null)
     const [error, setError] = useState('')
     const [inventory, setInventory] = useState('')
     const [myDonutCount, setMyDonutCount] = useState('')
+    const [buyCount, setBuyCount] = useState('')
 
     useEffect(() => {
         const init = async () => {
@@ -42,11 +44,15 @@ const VendingMachine = () => {
         web3Api.contract && getInventoryHandler()
     }, [web3Api.contract])
 
+    useEffect(() => {
+        if (account) {
+            getMyDonutCountHandler()
+        }
+    }, [web3Api, account])
+
     const getMyDonutCountHandler = async () => {
         const { contract } = web3Api
-        const accounts = await web3.eth.getAccounts()
-        const count = await contract.donutBalances(accounts[0]);
-        
+        const count = await contract.donutBalances(account);
         setMyDonutCount(count.toString())
     }
 
@@ -54,14 +60,40 @@ const VendingMachine = () => {
         if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
             try {
                 await window.ethereum.request({ method: "eth_requestAccounts" })
-                web3 = new Web3(window.ethereum)
-                getMyDonutCountHandler()
+                const web3 = new Web3(window.ethereum);
+
+                setWeb3Api({
+                    ...web3Api,
+                    web3
+                })
+
+                const accounts = await web3.eth.getAccounts()
+                setAccount(accounts[0]);
             } catch (e) {
                 setError(e.message);
             }
         } else {
-            console.log("Please install MetaMask")
+            setError("Please install MetaMask")
         }
+    }
+
+    const updateDonutQty = event => {
+        setBuyCount(event.target.value)
+    }
+
+    const buyDonutHandler = async () => {
+        const { contract, web3 } = web3Api
+
+        try {
+            await contract.purchase(buyCount)
+                .send({
+                    from: account,
+                    value: web3.utils.toWei('2', 'ether') * buyCount
+                })
+        } catch (e) {
+            setError(e.message)
+        }
+
     }
 
     return (
@@ -88,6 +120,20 @@ const VendingMachine = () => {
             <section>
                 <div className="container">
                     <h2>My donuts: {myDonutCount}</h2>
+                </div>
+            </section>
+            <section className="mt-5">
+                <div className="container">
+                    <div className="field">
+                        <label className="label">Buy Donuts</label>
+                        <div className="control">
+                            <input onChange={updateDonutQty} type="type" placeholder="Enter amount..."
+                                   className="input" />
+                        </div>
+                        <button onClick={buyDonutHandler} className="button is-primary mt-2">
+                            Buy
+                        </button>
+                    </div>
                 </div>
             </section>
             <section>
