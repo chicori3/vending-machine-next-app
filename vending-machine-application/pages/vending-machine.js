@@ -2,7 +2,7 @@ import Head from "next/head";
 import 'bulma/css/bulma.css'
 import styles from '../styles/VendingMachine.module.css'
 import Web3 from "web3";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import detectEthereumProvider from '@metamask/detect-provider'
 import { loadContract } from "../util/loadContract";
 
@@ -18,6 +18,7 @@ const VendingMachine = () => {
     const [inventory, setInventory] = useState('')
     const [myDonutCount, setMyDonutCount] = useState('')
     const [buyCount, setBuyCount] = useState('')
+    const [shouldReload, reload] = useState(false)
 
     useEffect(() => {
         const init = async () => {
@@ -37,18 +38,26 @@ const VendingMachine = () => {
     useEffect(() => {
         const getInventoryHandler = async () => {
             const { contract } = web3Api
-            const inventory = await contract.getVendingMachineBalance();
+            const inventory = await contract.getVendingMachineBalance()
             setInventory(inventory.toString())
         }
 
         web3Api.contract && getInventoryHandler()
-    }, [web3Api.contract])
+    }, [web3Api.contract, shouldReload])
 
     useEffect(() => {
-        if (account) {
+        account && getMyDonutCountHandler()
+    }, [web3Api, account])
+
+    useEffect(() => {
+        const updateMyDonutCount = async () => {
             getMyDonutCountHandler()
         }
-    }, [web3Api, account])
+
+        web3Api.contract && updateMyDonutCount()
+    }, [shouldReload])
+
+    const reloadEffect = useCallback(() => reload(!shouldReload), [shouldReload])
 
     const getMyDonutCountHandler = async () => {
         const { contract } = web3Api
@@ -82,18 +91,16 @@ const VendingMachine = () => {
     }
 
     const buyDonutHandler = async () => {
-        const { contract, web3 } = web3Api
-
         try {
-            await contract.purchase(buyCount)
-                .send({
-                    from: account,
-                    value: web3.utils.toWei('2', 'ether') * buyCount
-                })
+            await web3Api.contract.purchase(buyCount, {
+                from: account,
+                value: web3Api.web3.utils.toWei('2', 'ether') * buyCount
+            })
+
+            reloadEffect()
         } catch (e) {
             setError(e.message)
         }
-
     }
 
     return (
